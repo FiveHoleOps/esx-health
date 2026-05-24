@@ -28,7 +28,8 @@ Options:
 - `-p, --password`     ESXi password
 - `--save-creds`       Save credentials to the default config file
 - `--config-file file` Use a custom credential file
-- `--list-vms`         List all VMs and their current power state instead of snapshots
+- `-list`              List all VMs and their current power state
+- `-snaps`             List all current snapshots
 - `--help`             Show usage information
 
 ### Environment variables

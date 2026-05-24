@@ -6,13 +6,13 @@ DEFAULT_HOST="192.168.3.7"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 CONFIG_FILE="${ESXHEALTH_CONFIG:-$SCRIPT_DIR/.esxhealth.conf}"
 SAVE_CREDS=false
-LIST_VMS=false
+ACTION="snaps"
 
 usage() {
   cat <<EOF
-Usage: esxhealth [-h host] [-u user] [-p password] [--save-creds] [--config-file file] [--list-vms]
+Usage: esxhealth [-h host] [-u user] [-p password] [--save-creds] [--config-file file] [-list] [-snaps]
 
-Query an ESXi host using VCF.PowerCLI (or VMware.PowerCLI fallback) and list all current snapshots.
+Query an ESXi host using VCF.PowerCLI (or VMware.PowerCLI fallback) and list all current snapshots or VMs.
 
 Options:
   -h, --host         ESXi host or vCenter server
@@ -20,7 +20,8 @@ Options:
   -p, --password     ESXi password (avoid if you want to enter it interactively)
   --save-creds       Save host/user/password to the default config file
   --config-file file Use a custom credential file instead of $SCRIPT_DIR/.esxhealth.conf
-  --list-vms         List all VMs and their current power state instead of snapshots
+  -list              List all VMs and their current power state
+  -snaps             List all current snapshots
   --help             Show this help message
 
 Environment:
@@ -62,8 +63,12 @@ while [[ $# -gt 0 ]]; do
       CONFIG_FILE="$2"
       shift 2
       ;;
-    --list-vms)
-      LIST_VMS=true
+    -list)
+      ACTION="list"
+      shift
+      ;;
+    -snaps)
+      ACTION="snaps"
       shift
       ;;
     --help)
@@ -144,7 +149,7 @@ if ! command -v "$PWSH_CMD" >/dev/null 2>&1; then
 fi
 
 # Use PowerShell to query snapshots through PowerCLI core modules.
-ESXHEALTH_HOST="$HOST" ESXHEALTH_USER="$USER" ESXHEALTH_PASSWORD="$PASSWORD" ESXHEALTH_LIST_VMS="${LIST_VMS:+1}" \
+ESXHEALTH_HOST="$HOST" ESXHEALTH_USER="$USER" ESXHEALTH_PASSWORD="$PASSWORD" ESXHEALTH_ACTION="$ACTION" \
 "$PWSH_CMD" -NoProfile -NonInteractive -NoLogo -Command - <<'POWERSHELL' 2>&1 | grep -v -E '^[[:space:]]*(Welcome to (VMware|VCF) PowerCLI!|Log in to a vCenter Server or ESX host:|To find out what commands are available, type:|To show searchable help for all PowerCLI commands:|Once you.*connected, display all virtual machines: Get-VM|If you need more help, visit the PowerCLI community: Get-PowerCLICommunity|Copyright .* Broadcom|WARNING: The module .* is deprecated)' | awk 'NF'
 $esxHost = $env:ESXHEALTH_HOST
 $esxUser = $env:ESXHEALTH_USER
@@ -205,9 +210,9 @@ try {
     Abort "Error: Failed to connect to '$esxHost'. Check host, username, and password."
 }
 
-$listVMs = $env:ESXHEALTH_LIST_VMS -eq '1' -or $env:ESXHEALTH_LIST_VMS -eq 'true'
+$action = $env:ESXHEALTH_ACTION
 
-if (-not $listVMs) {
+if ($action -eq 'snaps') {
     try {
         $snapshots = Get-VM | Get-Snapshot -ErrorAction SilentlyContinue
     } catch {
@@ -230,7 +235,7 @@ if (-not $listVMs) {
                       State |
         Sort-Object VM, Name |
         Format-Table -AutoSize
-} else {
+} elseif ($action -eq 'list') {
     Get-VM |
         Select-Object Name, @{
             Name = 'PowerState'
