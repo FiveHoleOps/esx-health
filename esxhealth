@@ -144,7 +144,7 @@ if ! command -v "$PWSH_CMD" >/dev/null 2>&1; then
 fi
 
 # Use PowerShell to query snapshots through PowerCLI core modules.
-ESXHEALTH_HOST="$HOST" ESXHEALTH_USER="$USER" ESXHEALTH_PASSWORD="$PASSWORD" ESXHEALTH_LIST_VMS="$LIST_VMS" \
+ESXHEALTH_HOST="$HOST" ESXHEALTH_USER="$USER" ESXHEALTH_PASSWORD="$PASSWORD" ESXHEALTH_LIST_VMS="${LIST_VMS:+1}" \
 "$PWSH_CMD" -NoProfile -NonInteractive -NoLogo -Command - <<'POWERSHELL' 2>&1 | grep -v -E '^[[:space:]]*(Welcome to (VMware|VCF) PowerCLI!|Log in to a vCenter Server or ESX host:|To find out what commands are available, type:|To show searchable help for all PowerCLI commands:|Once you.*connected, display all virtual machines: Get-VM|If you need more help, visit the PowerCLI community: Get-PowerCLICommunity|Copyright .* Broadcom|WARNING: The module .* is deprecated)' | awk 'NF'
 $esxHost = $env:ESXHEALTH_HOST
 $esxUser = $env:ESXHEALTH_USER
@@ -205,7 +205,7 @@ try {
     Abort "Error: Failed to connect to '$esxHost'. Check host, username, and password."
 }
 
-$listVMs = $env:ESXHEALTH_LIST_VMS -eq '1'
+$listVMs = $env:ESXHEALTH_LIST_VMS -eq '1' -or $env:ESXHEALTH_LIST_VMS -eq 'true'
 
 if (-not $listVMs) {
     try {
