@@ -10,7 +10,7 @@ ACTION="snaps"
 
 usage() {
   cat <<EOF
-Usage: esxhealth [-h host] [-u user] [-p password] [--save-creds] [--config-file file] [-list] [-snaps]
+Usage: esxhealth [-h host] [-u user] [-p password] [--save-creds] [--config-file file] [-list] [-snaps] [-ds]
 
 Query an ESXi host using VCF.PowerCLI (or VMware.PowerCLI fallback) and list all current snapshots or VMs.
 
@@ -22,6 +22,7 @@ Options:
   --config-file file Use a custom credential file instead of $SCRIPT_DIR/.esxhealth.conf
   -list              List all VMs and their current power state
   -snaps             List all current snapshots
+  -ds                List datastores and their free space
   --help             Show this help message
 
 Environment:
@@ -69,6 +70,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -snaps)
       ACTION="snaps"
+      shift
+      ;;
+    -ds)
+      ACTION="datastores"
       shift
       ;;
     --help)
@@ -250,6 +255,13 @@ if ($action -eq 'snaps') {
             }
         } |
         Sort-Object Name |
+        Format-Table -AutoSize
+} elseif ($action -eq 'datastores') {
+    Get-Datastore | 
+        Select-Object Name, 
+                      @{Name='CapacityGB'; Expression={[math]::Round($_.CapacityGB, 2)}}, 
+                      @{Name='FreeSpaceGB'; Expression={[math]::Round($_.FreeSpaceGB, 2)}},
+                      @{Name='FreePercent'; Expression={[math]::Round(($_.FreeSpaceGB / $_.CapacityGB) * 100, 2)}} | 
         Format-Table -AutoSize
 }
 

@@ -30,6 +30,7 @@ Options:
 - `--config-file file` Use a custom credential file
 - `-list`              List all VMs and their current power state
 - `-snaps`             List all current snapshots
+- `-ds`                List datastores and their free space
 - `--help`             Show usage information
 
 ### Environment variables
