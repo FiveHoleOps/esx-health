@@ -28,6 +28,7 @@ Options:
 - `-p, --password`     ESXi password
 - `--save-creds`       Save credentials to the default config file
 - `--config-file file` Use a custom credential file
+- `--list-vms`         List all VMs and their current power state instead of snapshots
 - `--help`             Show usage information
 
 ### Environment variables
@@ -56,6 +57,16 @@ ESX_PASSWORD="secret"
 ```bash
 ./esxhealth --host 192.168.3.7 --user root --password secret --save-creds
 ```
+
+## List all VMs and power state
+
+To list all virtual machines and whether they are powered on or off, use PowerCLI directly with a simple command:
+
+```powershell
+Get-VM | Select-Object Name, PowerState | Format-Table -AutoSize
+```
+
+This returns a table with each VM name and its current power state (`PoweredOn`, `PoweredOff`, or `Suspended`).
 
 ## Notes
 
