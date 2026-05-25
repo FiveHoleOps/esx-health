@@ -1,19 +1,18 @@
 # esx-health
 
-A small Bash wrapper that queries an ESXi host using PowerShell PowerCLI and lists all current VM snapshots.
+A small Bash wrapper that queries an ESXi host using SSH and lists all current VM snapshots.
 
 ## Features
 
-- Connects to an ESXi host or vCenter server
-- Uses `VCF.PowerCLI` / `VCF.VimAutomation.Core` or `VMware.PowerCLI` fallback
+- Connects directly to an ESXi host via SSH
+- Bypasses read-only API restrictions in ESXi Free Edition for real-time datastore metrics
 - Supports stored credentials in a local config file
-- Suppresses PowerCLI startup banner and deprecation warnings where possible
 
 ## Requirements
 
 - `bash`
-- `pwsh` (PowerShell Core)
-- VMware PowerCLI or VCF PowerCLI modules installed
+- `ssh`
+- `sshpass` (for automated password authentication)
 
 ## Usage
 
@@ -31,6 +30,7 @@ Options:
 - `-list`              List all VMs and their current power state
 - `-snaps`             List all current snapshots
 - `-ds`                List datastores and their free space
+- `-uptime`            Show the ESXi host uptime
 - `--help`             Show usage information
 
 ### Environment variables
@@ -62,10 +62,10 @@ ESX_PASSWORD="secret"
 
 ## List all VMs and power state
 
-To list all virtual machines and whether they are powered on or off, use PowerCLI directly with a simple command:
+To list all virtual machines and whether they are powered on or off, the script natively parses `vim-cmd` over SSH:
 
-```powershell
-Get-VM | Select-Object Name, PowerState | Format-Table -AutoSize
+```bash
+vim-cmd vmsvc/getallvms
 ```
 
 This returns a table with each VM name and its current power state (`PoweredOn`, `PoweredOff`, or `Suspended`).
